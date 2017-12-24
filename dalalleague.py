@@ -38,6 +38,7 @@ def leaguee():
     for row in result:
         if username in row['username']:
             session['loggedin'] = True
+            dbclose(connection)
             return render_template("mainleague.html")
 
 
@@ -56,7 +57,7 @@ def joinleague():
 @app.route('/createmyleagues', methods=['post', 'get'])
 def myleagues():
     leagueName = request.form['name']
-    print(leagueName )
+    print(leagueName)
     leagueid = ''.join(random.choice('0123456789ABCDEF') for i in range(5))
     print(leagueid)
     val = 0
@@ -84,13 +85,13 @@ def myleagues():
 
     print(val)
 
-    query = "INSERT INTO leagueinfo(leagueid,val) VALUES (%s,%s)"
-    args = (leagueid,val)
+    query = "INSERT INTO leagueinfo(leagueid,val,leaguename) VALUES (%s,%s,%s)"
+    args = (leagueid,val,leagueName)
     connection.execute(query,args)
 
     print("LEAGUE " + str(leagueid) + " VALUE " + str(val))
-    message = "Id for the last created league was " + str(leagueid)
-
+    message = "Id for the last created league "+str(leagueName)+" is " + str(leagueid)
+    dbclose(connection)
     return render_template("index.html",message=message)
 
 
@@ -109,7 +110,8 @@ def joinleaguee():
         result=connection.execute(query)
         for row in result:
             if session['username'] in row['userid']:
-                return render_template("index.html",message="You are already a member of the group!")
+                dbclose(connection)
+                return render_template("index.html",message="You are already a member of the league!")
 
 
         query = "INSERT INTO members(leagueid,userid) VALUES(%s,%s) "
@@ -138,8 +140,24 @@ def joinleaguee():
         query = "UPDATE leagueinfo SET val=%s WHERE leagueid=%s"
         args = (val, leagueid)
         connection.execute(query, args)
+        dbclose(connection)
         return render_template("index.html")
+
+@app.route('/leaguetable')
+def leaguetable():
+
+    connection = dbconnect()
+    query = "SELECT leaguename,val FROM leagueinfo ORDER BY val DESC "
+    result = connection.execute(query)
+    print
+    tabledict={}
+
+    for row in result:
+        tabledict[row['leaguename']] = row['val']
+
+    return render_template("leaguetable.html", table=tabledict)
+
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)

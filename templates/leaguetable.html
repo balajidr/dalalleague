@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>league leaderboard</title>
+</head>
+<body>
+
+{% if table %}
+    {% for key,value in table.items() %}
+    <h2>{{ key }} : {{ value }}</h2>
+    {% endfor %}
+{% endif %}
+
+
+</body>
+</html>
