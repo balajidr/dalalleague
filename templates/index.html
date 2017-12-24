@@ -5,14 +5,19 @@
     <title>league</title>
 </head>
 <body>
+   login to access
 
-<form action="/myleagues" method="post">
-    <input id="type" type="radio" value="openleague"/> Open league
-    <input id="type" type="radio" value="closedleague"/> Closed league
+<form action="/league" method="post" >
+
+    <input type="text" name="username" >
+    <input type="submit" >
     <br>
     <br>
-    <input id="name" type="text" placeholder="Enter your team name"/>
-    <input type="submit" value="submit">
+    {% if message %}
+        <h3>{{ message }}</h3>
+    {% endif %}
+
+
 </form>
 
 </body>
