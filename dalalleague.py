@@ -104,6 +104,14 @@ def joinleaguee():
     result = connection.execute(query,args)
 
     if result:
+
+        query = "SELECT userid FROM members"
+        result=connection.execute(query)
+        for row in result:
+            if session['username'] in row['userid']:
+                return render_template("index.html",message="You are already a member of the group!")
+
+
         query = "INSERT INTO members(leagueid,userid) VALUES(%s,%s) "
         args = (leagueid, session['username'])
         connection.execute(query, args)
