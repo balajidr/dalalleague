@@ -16,5 +16,24 @@
 <br>
 <a href="/leaguetable">View league leader board</a>
 
+<br>
+<br>
+
+<a href="/myownleagues">View leagues that i am part of!</a>
+
+<br>
+<br>
+
+
+    {% if leaguesda %}
+    {% for keys,values in leaguesda.items() %}
+        <form action="/myownleagues/{{ keys }}" method="POST">
+        <h6>{{ keys }} : {{ values[0] }} :: {{ values[1] }} ---> </h6>
+        <input type="submit" name="submit" value="submit" >
+       </form>
+    {% endfor %}
+{% endif %}
+
+
 </body>
 </html>

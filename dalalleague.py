@@ -29,17 +29,19 @@ def league():
     return render_template("index.html")
 
 
-@app.route('/league', methods=['post'])
+@app.route('/league', methods=['POST'])
 def leaguee():
-    username = request.form['username']
-    session['username'] = username
-    connection = dbconnect()
-    result = connection.execute("SELECT username from users")
-    for row in result:
-        if username in row['username']:
-            session['loggedin'] = True
-            dbclose(connection)
-            return render_template("mainleague.html")
+    if request.method == 'POST':
+        if request.form['submit'] == 'submit':
+            username = request.form['username']
+            session['username'] = username
+            connection = dbconnect()
+            result = connection.execute("SELECT username from users")
+            for row in result:
+                if username in row['username']:
+                    session['loggedin'] = True
+                    dbclose(connection)
+                    return render_template("mainleague.html")
 
 
 
@@ -54,60 +56,62 @@ def joinleague():
     return render_template("joinleague.html")
 
 
-@app.route('/createmyleagues', methods=['post', 'get'])
+@app.route('/createmyleagues', methods=['POST'])
 def myleagues():
-    leagueName = request.form['name']
-    print(leagueName)
-    leagueid = ''.join(random.choice('0123456789ABCDEF') for i in range(5))
-    print(leagueid)
-    val = 0
-    connection = dbconnect()
-    query = "INSERT INTO members(leagueid,userid) VALUES(%s,%s)"
-    args = (leagueid, session['username'])
-    connection.execute(query, args)
-    print("inserted into members")
-    members = []
-    query = "SELECT userid FROM members WHERE leagueid=%s"
-    args = (leagueid)
-    result = connection.execute(query, args)
-    for row in result:
-        temp = row['userid']
-        members.append(temp)
-    print("got all the users from the league")
-    print(members)
+    if request.method == 'POST':
+        if request.form['submit'] == 'submit':
+            leagueName = request.form['name']
+            print(leagueName)
+            leagueid = ''.join(random.choice('0123456789ABCDEF') for i in range(5))
+            print(leagueid)
+            val = 0
+            connection = dbconnect()
+            query = "INSERT INTO members(leagueid,userid) VALUES(%s,%s)"
+            args = (leagueid, session['username'])
+            connection.execute(query, args)
+            print("inserted into members")
+            members = []
+            query = "SELECT userid FROM members WHERE leagueid=%s"
+            args = (leagueid)
+            result = connection.execute(query, args)
+            for row in result:
+                temp = row['userid']
+                members.append(temp)
+            print("got all the users from the league")
+            print(members)
 
-    for user in members:
-        args = (user)
-        query = "SELECT val FROM users WHERE username=%s"
-        result = connection.execute(query,args)
-        for row in result:
-            val = val + row['val']
+            for user in members:
+                args = (user)
+                query = "SELECT val FROM users WHERE username=%s"
+                result = connection.execute(query,args)
+                for row in result:
+                    val = val + row['val']
 
-    print(val)
+            print(val)
 
-    query = "INSERT INTO leagueinfo(leagueid,val,leaguename) VALUES (%s,%s,%s)"
-    args = (leagueid,val,leagueName)
-    connection.execute(query,args)
+            query = "INSERT INTO leagueinfo(leagueid,val,leaguename) VALUES (%s,%s,%s)"
+            args = (leagueid,val,leagueName)
+            connection.execute(query,args)
 
-    print("LEAGUE " + str(leagueid) + " VALUE " + str(val))
-    message = "Id for the last created league "+str(leagueName)+" is " + str(leagueid)
-    dbclose(connection)
-    return render_template("index.html",message=message)
+            print("LEAGUE " + str(leagueid) + " VALUE " + str(val))
+            message = "Id for the last created league "+str(leagueName)+" is " + str(leagueid)
+            dbclose(connection)
+            return render_template("index.html",message=message)
 
 
-@app.route('/joinleaguee',methods=['post','get'])
+@app.route('/joinleaguee',methods=['post'])
 def joinleaguee():
     leagueid = request.form['leagueid']
 
     connection = dbconnect()
-    query = "SELECT * FROM leagueinfo WHERE leagueid=%s"
+    query = "SELECT leaguename FROM leagueinfo WHERE leagueid=%s"
     args = (leagueid)
-    result = connection.execute(query,args)
+    result = connection.execute(query, args)
 
     if result:
 
-        query = "SELECT userid FROM members"
-        result=connection.execute(query)
+        query = "SELECT userid FROM members WHERE leagueid=%s"
+        result = connection.execute(query,args)
         for row in result:
             if session['username'] in row['userid']:
                 dbclose(connection)
@@ -147,17 +151,68 @@ def joinleaguee():
 def leaguetable():
 
     connection = dbconnect()
-    query = "SELECT leaguename,val FROM leagueinfo ORDER BY val DESC "
+    query = "SELECT leaguename,val FROM leagueinfo ORDER BY val ASC"
     result = connection.execute(query)
-    print
     tabledict={}
 
     for row in result:
         tabledict[row['leaguename']] = row['val']
 
+    print( tabledict)
     return render_template("leaguetable.html", table=tabledict)
 
 
+@app.route('/myownleagues')
+def myownleague():
+    connection = dbconnect()
+    query="SELECT leagueid from members WHERE userid=%s"
+    args=(session['username'])
+
+    result = connection.execute(query,args)
+    leaguesiampartof = []
+    if result:
+        for row in result:
+            leaguesiampartof.append(row['leagueid'])
+    print(leaguesiampartof)
+
+    myleaguesinfo = {}
+    for ids in leaguesiampartof:
+        query = "SELECT leagueid,leaguename,val FROM leagueinfo WHERE leagueid=%s"
+        args=(ids)
+
+        result = connection.execute(query,args)
+        for row in result:
+            myleaguesinfo[row['leagueid']] = [row['leaguename'], row['val']]
+
+
+    print(myleaguesinfo)
+
+    return render_template("mainleague.html", leaguesda=myleaguesinfo)
+
+
+@app.route('/myownleagues/<leagueid>',methods=['POST'])
+def myleagueinfo(leagueid):
+    if request.method == 'POST':
+        if request.form['submit'] == "submit":
+            connection = dbconnect()
+            query = "SELECT userid FROM members WHERE leagueid=%s"
+            args = (leagueid)
+            members=[]
+            result = connection.execute(query, args)
+            for row in result:
+                temp = row['userid']
+                members.append(temp)
+            print("got all the users from the league")
+            print(members)
+            info = {}
+            for user in members:
+                query = "SELECT username,val FROM users WHERE username=%s"
+                args = (user)
+                result = connection.execute(query, args)
+                for row in result:
+                    info[row['username']] = row['val']
+            print(info)
+            return render_template("myleagueinfo.html",info=info)
 
 if __name__ == '__main__':
     app.run(debug=True)
