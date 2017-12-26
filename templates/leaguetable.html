@@ -7,11 +7,10 @@
 <body>
 
 {% if table %}
-    {% for key,value in table.items() %}
-    <h2>{{ key }} : {{ value }}</h2>
+    {% for key in order %}
+    <h2>{{key }}:{{ table[key] }}</h2>
     {% endfor %}
 {% endif %}
-
 
 </body>
 </html>

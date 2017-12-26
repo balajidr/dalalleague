@@ -8,7 +8,7 @@ from flask_session import Session
 app = Flask(__name__)
 sess = Session()
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SECRET_KEY'] = 'redsfsfsfsfis'
+app.config['SECRET_KEY'] = 'podadukukkumandaya'
 sess.init_app(app)
 
 
@@ -64,8 +64,13 @@ def myleagues():
             print(leagueName)
             leagueid = ''.join(random.choice('0123456789ABCDEF') for i in range(5))
             print(leagueid)
-            val = 0
             connection = dbconnect()
+            query = "SELECT leagueid FROM members"
+            result = connection.execute(query)
+            for row in result:
+                if leagueid in row['leagueid']:
+                    leagueid = ''.join(random.choice('0123456789ABCDEF') for i in range(5))
+            val = 0
             query = "INSERT INTO members(leagueid,userid) VALUES(%s,%s)"
             args = (leagueid, session['username'])
             connection.execute(query, args)
@@ -147,19 +152,23 @@ def joinleaguee():
         dbclose(connection)
         return render_template("index.html")
 
+
 @app.route('/leaguetable')
 def leaguetable():
 
     connection = dbconnect()
-    query = "SELECT leaguename,val FROM leagueinfo ORDER BY val ASC"
+    query = "SELECT leaguename,val FROM leagueinfo ORDER BY val DESC "
     result = connection.execute(query)
     tabledict={}
 
     for row in result:
+        print(row['val'])
         tabledict[row['leaguename']] = row['val']
 
+    desc = sorted(tabledict, key=tabledict.get, reverse=True)
+    print(desc)
     print( tabledict)
-    return render_template("leaguetable.html", table=tabledict)
+    return render_template("leaguetable.html", table=tabledict,order=desc)
 
 
 @app.route('/myownleagues')
@@ -178,15 +187,12 @@ def myownleague():
     myleaguesinfo = {}
     for ids in leaguesiampartof:
         query = "SELECT leagueid,leaguename,val FROM leagueinfo WHERE leagueid=%s"
-        args=(ids)
+        args = (ids)
 
         result = connection.execute(query,args)
         for row in result:
             myleaguesinfo[row['leagueid']] = [row['leaguename'], row['val']]
-
-
     print(myleaguesinfo)
-
     return render_template("mainleague.html", leaguesda=myleaguesinfo)
 
 
@@ -206,7 +212,7 @@ def myleagueinfo(leagueid):
             print(members)
             info = {}
             for user in members:
-                query = "SELECT username,val FROM users WHERE username=%s"
+                query = "SELECT username,val FROM users WHERE username=%s ORDER BY val DESC "
                 args = (user)
                 result = connection.execute(query, args)
                 for row in result:
