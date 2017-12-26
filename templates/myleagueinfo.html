@@ -7,9 +7,9 @@
 <body>
 
 {% if info %}
-    {% for keys,value in info.items() %}
+    {% for keys in order %}
 
-        {{ keys }}  : : : {{ value }} <br>
+        {{ keys }}  : : : {{ info[keys] }} <br>
 
     {% endfor %}
 {% endif %}

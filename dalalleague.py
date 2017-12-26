@@ -193,6 +193,9 @@ def myownleague():
         for row in result:
             myleaguesinfo[row['leagueid']] = [row['leaguename'], row['val']]
     print(myleaguesinfo)
+
+
+
     return render_template("mainleague.html", leaguesda=myleaguesinfo)
 
 
@@ -218,7 +221,10 @@ def myleagueinfo(leagueid):
                 for row in result:
                     info[row['username']] = row['val']
             print(info)
-            return render_template("myleagueinfo.html",info=info)
+
+            desc = sorted(info, key=info.get, reverse=True)
+
+            return render_template("myleagueinfo.html",info=info,order=desc)
 
 if __name__ == '__main__':
     app.run(debug=True)
