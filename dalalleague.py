@@ -225,6 +225,45 @@ def myleagueinfo(leagueid):
             desc = sorted(info, key=info.get, reverse=True)
 
             return render_template("myleagueinfo.html",info=info,order=desc)
+        
+def leagueupdates():
+    currentuser = User.getUser(userId=session['userid'], r=USERDBCONN)
+    userleagues = []
+    tempo = []
+
+    connection = dbconnect()
+    query1 = "SELECT leagueid FROM members WHERE username=%s"
+    args1 = (currentuser['username'])
+
+    result1 = connection.execute(query1,args1)
+    for row in result1:
+        userleagues.append(row['leagueid'])
+    print(userleagues)
+    for ids in userleagues:
+        leaguetotal = 0
+        query2 = "SELECT username FROM members WHERE leagueid=%s"
+        args2=(ids)
+        result2 = connection.execute(query2,args2)
+        tempo=[]
+        for rowy in result2:
+            tempo.append(rowy['username'])
+        print(tempo)
+        for users in tempo:
+            query3 = "SELECT val FROM users WHERE username=%s"
+            args3=(users)
+            result3 = connection.execute(query3,args3)
+            for rows in result3:
+                print(rows['val'])
+                leaguetotal = leaguetotal + int(rows['val'])
+                print("league val = " + str(leaguetotal) +" after " + str(users))
+
+        query4 = "UPDATE leagueinfo SET val=%s WHERE leagueid=%s"
+        args4 = (int(leaguetotal),ids)
+        result = connection.execute(query4,args4)
+        print("updated leagues table")
+
+    dbclose(connection)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
